@@ -6,7 +6,7 @@ foo(p,x) {
           *q = (*p)-1;
           f=(*p)*((x)(q,x));
      }
-     return f^;
+     return f;
 }
 
 main() {
