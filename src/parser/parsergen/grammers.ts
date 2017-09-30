@@ -1,9 +1,18 @@
+import C = require("typescript-collections");
+
 export class LRTerm {
     private rule: Rule;
     private index: number = 0;
 
     constructor(rule: Rule) {
         this.rule = rule;
+    }
+
+    /**
+     * For typpescript-collections.
+     */
+    public toStrig() {
+        return C.util.makeString(this);
     }
 
     public getRule(): Rule {
@@ -22,11 +31,11 @@ export class LRTerm {
         return this.rule.getRhs()[this.index];
     }
 
-    public toString(): string {
-        let str: string = this.rule.getLhs().getSymStr().toString() + " -> ";
+    public getString() {
+        let str: string = this.rule.getLhs().getSymbolStr().toString() + " -> ";
         const rhs: GSymbol[] = this.rule.getRhs();
         for (let i = 0; i < rhs.length; i++) {
-            const sym: string = rhs[i].getSymStr().toString();
+            const sym: string = rhs[i].getSymbolStr().toString();
             str = (i === this.index)
                 ? str.concat(".").concat(sym)
                 : str.concat(" ").concat(sym);
@@ -53,10 +62,10 @@ export class Rule {
         this.rhs = rhs;
     }
 
-    public toString(): string {
-        return this.lhs.getSymStr()
+    public getString(): string {
+        return this.lhs.getSymbolStr()
             + " -> "
-            + this.rhs.map((sym: GSymbol) => sym.getSymStr().toString()).join(" ");
+            + this.rhs.map((sym: GSymbol) => sym.getSymbolStr().toString()).join(" ");
     }
 
     public getLhs(): NTSymbol {
@@ -65,6 +74,10 @@ export class Rule {
 
     public getRhs(): GSymbol[] {
         return this.rhs;
+    }
+
+    public toStrig() {
+        return C.util.makeString(this);
     }
 }
 
@@ -75,10 +88,13 @@ export abstract class GSymbol {
         this.sym = sym;
     }
 
-    public getSymStr(): string {
+    public getSymbolStr(): string {
         return this.sym;
     }
 
+    public toString() {
+        return C.util.makeString(this);
+    }
 }
 
 export class NTSymbol extends GSymbol {

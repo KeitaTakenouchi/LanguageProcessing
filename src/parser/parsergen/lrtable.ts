@@ -1,30 +1,24 @@
-import { Rule, LRTerm, NTSymbol, TSymbol, ExitGSymbol, EntryNTSymbol, GSymbol } from "./grammers";
+import C = require("typescript-collections");
+import { EntryNTSymbol, ExitGSymbol, GSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "./grammers";
 
 export class LRTable {
     private rules: Rule[];
     private terms: LRTerm[] = [];
 
-    private follows: Map<NTSymbol, TSymbol[]> = new Map();
+    private follows: C.Dictionary<NTSymbol, C.Set<TSymbol>> = new C.Dictionary();
 
     constructor(rules: Rule[]) {
         this.rules = rules;
         this.calcFollows();
     }
 
-    public follow(key: NTSymbol): TSymbol[] {
-        let value;
-        for (let nt of this.follows.keys()) {
-            if (nt.getSymStr() == key.getSymStr()) {
-                value = this.follows.get(nt);
-                break;
-            }
+    public follow(key: NTSymbol): C.Set<TSymbol> {
+        let val = this.follows.getValue(key);
+        if (!val) {
+            val = new C.Set<TSymbol>();
+            this.follows.setValue(key, val);
         }
-
-        if (!value) {
-            value = [];
-            this.follows.set(key, value);
-        }
-        return value;
+        return val;
     }
 
     public closure(terms: LRTerm[]): LRTerm[] {
@@ -37,41 +31,57 @@ export class LRTable {
                 let nextSym: GSymbol = t.getNextSymbol();
                 if (!(nextSym instanceof NTSymbol)) continue;
 
-                let terms = this.findLRTermsStartWith(nextSym as NTSymbol);
-                for (let term of terms) {
+                let ts = this.findLRTermsStartWith(nextSym as NTSymbol);
+                for (let term of ts) {
                     if (contains(all, term)) continue;
                     all.push(term);
                     nextTerms.push(term);
                 }
             }
-            if (nextTerms.length == 0) break;
+            if (nextTerms.length === 0) break;
             added.push(nextTerms);
         }
         return all;
 
         // local functions.
-        function contains(terms: LRTerm[], term: LRTerm): boolean {
-            for (let t of terms) {
+        function contains(ts: LRTerm[], term: LRTerm): boolean {
+            for (let t of ts) {
                 if (t.equals(term)) return true;
             }
             return false;
         }
     }
 
+    public dumpFollow(): void {
+        console.log("---- FOLLOWS ----");
+        this.follows.forEach(
+            (key: NTSymbol, values: C.Set<TSymbol>) => {
+                console.log(" FOLLOW[" + key.getSymbolStr() + "] = {"
+                    + values.toArray().map((s) => s.getSymbolStr()).join(", ") + "}");
+            });
+    }
+
+    public dumpRules(): void {
+        console.log("---- RULES ----");
+        this.rules.forEach(
+            (rule) => {
+                console.log(" " + rule.getString());
+            });
+    }
+
     private calcFollows() {
         let prev: number = -1;
-        let exitSym = new ExitGSymbol()
-        while (prev != size(this.follows)) {
+        let exitSym = new ExitGSymbol();
+        while (prev !== size(this.follows)) {
             prev = size(this.follows);
             for (let rule of this.rules) {
                 let lhs: NTSymbol = rule.getLhs();
 
-                // S -> *
+                // when S -> *
                 if (lhs instanceof EntryNTSymbol) {
-                    let fs: TSymbol[] = this.follow(lhs);
                     // follow[S] = follow[S] ∪ {$}
-                    if (!LRTable.contains(fs, exitSym))
-                        fs.push(exitSym);
+                    let fs = this.follow(lhs);
+                    fs.add(exitSym);
                 }
 
                 let rhs: GSymbol[] = rule.getRhs();
@@ -81,10 +91,9 @@ export class LRTable {
 
                     // when A -> aBb
                     if (current instanceof NTSymbol && next instanceof TSymbol) {
-                        let fb: TSymbol[] = this.follow(current);
                         // follow[B] = follow[B] ∪ {b}
-                        if (!LRTable.contains(fb, next))
-                            fb.push(next);
+                        let fb = this.follow(current);
+                        fb.add(next);
                     }
 
                     // when A -> aB
@@ -92,20 +101,17 @@ export class LRTable {
                         // follow[B] = follow[B] ∪ follow[A]
                         let fb = this.follow(current);
                         let fa = this.follow(lhs);
-                        for (let s of fa) {
-                            if (!LRTable.contains(fb, s))
-                                fb.push(s);
-                        }
+                        fb.union(fa);
                     }
                 }
             }
         }
 
         // local function.
-        function size(map: Map<NTSymbol, TSymbol[]>): number {
+        function size(map: C.Dictionary<NTSymbol, C.Set<TSymbol>>): number {
             let sum = 0;
-            for (let arr of map.values())
-                sum = sum + arr.length;
+            for (let vs of map.values())
+                sum = sum + vs.size();
             return sum;
         }
     }
@@ -113,30 +119,10 @@ export class LRTable {
     private findLRTermsStartWith(nt: NTSymbol): LRTerm[] {
         let ts = [];
         for (let t of this.terms) {
-            if (t.getRule().getLhs().getSymStr() == nt.getSymStr())
+            if (t.getRule().getLhs().getSymbolStr() === nt.getSymbolStr())
                 ts.push(t);
         }
         return ts;
     }
 
-    private static contains(ss: GSymbol[], target: GSymbol): boolean {
-        for (let s of ss) {
-            if (s.getSymStr() == target.getSymStr())
-                return true;
-        }
-        return false;
-    }
-
-    public dumpFollow(): void {
-        this.follows.forEach(function (values: TSymbol[], key: NTSymbol) {
-            console.log("FOLLOW[" + key.getSymStr() + "] = {"
-                + values.map((s) => s.getSymStr()).join(", ") + "}");
-        })
-    }
-
-    public dumpRules(): void {
-        this.rules.forEach(function (rule) {
-            console.log(rule.toString());
-        })
-    }
 }

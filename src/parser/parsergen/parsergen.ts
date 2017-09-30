@@ -1,5 +1,5 @@
+import { EntryNTSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "./grammers";
 import { LRTable } from "./lrtable";
-import { Rule, LRTerm, EntryNTSymbol, NTSymbol, TSymbol } from "./grammers";
 
 class LRParserGen {
     public static main() {

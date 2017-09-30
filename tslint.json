@@ -1,5 +1,5 @@
 {
-    "defaultSeverity": "warning",
+    "defaultSeverity": "none", // not reflected.
     "extends": [
         "tslint:recommended"
     ],
@@ -7,7 +7,9 @@
     "rules": {
         "curly": false,
         "no-console": false,
-        "max-classes-per-file": false
+        "max-classes-per-file": false,
+        "no-consecutive-blank-lines": false,
+        "prefer-const": false
     },
     "rulesDirectory": []
 }
