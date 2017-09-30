@@ -28,23 +28,18 @@ describe("LR talbe", () => {
         it(" calculate closure of S.", () => {
             let table = new LRTable(rules);
             let term = new LRTerm(rules[1]);
-            let closure: C.Set<LRTerm>;
-            closure = table.closure([term]);
+
+            let closure: C.Set<LRTerm> = new C.Set<LRTerm>();
+            closure.add(term);
+            closure = table.closure(closure);
             console.log("closure of " + term.getString());
             closure.forEach((t) => { console.log("   " + t.getString()); });
             Assert.equal(closure.size(), 6);
+        });
 
-            term = term.proceed();
-            closure = table.closure([term]);
-            console.log("closure of " + term.getString());
-            closure.forEach((t) => { console.log("   " + t.getString()); });
-            Assert.equal(closure.size(), 1);
-
-            term = term.proceed();
-            closure = table.closure([term]);
-            console.log("closure of " + term.getString());
-            closure.forEach((t) => { console.log("   " + t.getString()); });
-            Assert.equal(closure.size(), 5);
+        it(" Create LR(0) automata.", () => {
+            let table = new LRTable(rules);
+            table.dumpAutomata();
         });
     });
 });
