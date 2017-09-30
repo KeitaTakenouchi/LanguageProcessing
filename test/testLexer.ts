@@ -43,10 +43,9 @@ describe("Lexer (Scanner)", () => {
         let token: Token = scanner.scan();
         let count = 1;
         while (token) {
-            console.log(token);
             token = scanner.scan();
             count++;
         }
-        Assert.equal(count, 87);
+        Assert.equal(count, 86);
     });
 });
