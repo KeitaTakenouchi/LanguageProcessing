@@ -11,11 +11,42 @@ describe("Lexer (Scanner)", () => {
         let scanner = new Scanner(body);
 
         let token: Token = scanner.scan();
-        let count = 0;
+        let count = 1;
         while (token) {
             token = scanner.scan();
             count++;
         }
-        Assert.equal(count, 36);
+        Assert.equal(count, 37);
+    });
+
+    it("works collectly for b.tip.", () => {
+        const fs = require("fs");
+        let filename: string = "sample_programs/b.tip";
+        let body: string = fs.readFileSync(filename, "UTF-8");
+        let scanner = new Scanner(body);
+
+        let token: Token = scanner.scan();
+        let count = 1;
+        while (token) {
+            token = scanner.scan();
+            count++;
+        }
+        Assert.equal(count, 39);
+    });
+
+    it("works collectly for b.tip.", () => {
+        const fs = require("fs");
+        let filename: string = "sample_programs/c.tip";
+        let body: string = fs.readFileSync(filename, "UTF-8");
+        let scanner = new Scanner(body);
+
+        let token: Token = scanner.scan();
+        let count = 1;
+        while (token) {
+            console.log(token);
+            token = scanner.scan();
+            count++;
+        }
+        Assert.equal(count, 87);
     });
 });
