@@ -11,7 +11,7 @@ export class LRTerm {
     /**
      * For typpescript-collections.
      */
-    public toStrig() {
+    public toString() {
         return C.util.makeString(this);
     }
 
@@ -76,8 +76,8 @@ export class Rule {
         return this.rhs;
     }
 
-    public toStrig() {
-        return C.util.makeString(this);
+    public toString() {
+        return C.util.makeString(this) ;
     }
 }
 
@@ -118,5 +118,20 @@ export class EntryNTSymbol extends NTSymbol {
 export class ExitGSymbol extends GSymbol {
     constructor() {
         super("$");
+    }
+}
+
+export enum ActionKind {
+    Shift,
+    Reduce,
+    Accepted,
+}
+
+export class Action {
+    public readonly kind: ActionKind;
+    public readonly state: number;
+    constructor(kind: ActionKind, state: number) {
+        this.kind = kind;
+        this.state = state;
     }
 }
