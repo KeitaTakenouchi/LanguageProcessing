@@ -1,8 +1,10 @@
-import { EntryNTSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "./grammers";
-import { LRTable } from "./lrtable";
+import Assert = require("assert");
+import "mocha";
+import { EntryNTSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "../src/parser/parsergen/grammers";
+import { LRTable } from "../src/parser/parsergen/lrtable";
 
-class LRParserGen {
-    public static main() {
+describe("parser generator", () => {
+    it("# check creating LR table correctly.", () => {
         let rules: Rule[] = [];
         let terms: LRTerm[] = [];
 
@@ -17,7 +19,5 @@ class LRParserGen {
         let table = new LRTable(rules);
         table.dumpRules();
         table.dumpFollow();
-    }
-}
-
-LRParserGen.main();
+    });
+});
