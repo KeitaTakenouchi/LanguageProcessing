@@ -11,8 +11,8 @@ export class LRTerm {
     }
 
     public proceed(): LRTerm {
-        let t = new LRTerm(this.rule);
-        let max = this.rule.getRhs().length;
+        const t = new LRTerm(this.rule);
+        const max = this.rule.getRhs().length;
         t.index = (this.index < max) ? this.index + 1 : this.index;
         return t;
     }
@@ -24,10 +24,10 @@ export class LRTerm {
 
     public toString(): string {
         let str: string = this.rule.getLhs().getSymStr().toString() + " -> ";
-        let rhs: GSymbol[] = this.rule.getRhs();
+        const rhs: GSymbol[] = this.rule.getRhs();
         for (let i = 0; i < rhs.length; i++) {
-            let sym: string = rhs[i].getSymStr().toString();
-            str = (i == this.index)
+            const sym: string = rhs[i].getSymStr().toString();
+            str = (i === this.index)
                 ? str.concat(".").concat(sym)
                 : str.concat(" ").concat(sym);
         }
@@ -36,10 +36,10 @@ export class LRTerm {
 
     public equals(o: any): boolean {
         if (!(o instanceof LRTerm)) return false;
-        let t = o as LRTerm;
+        const t = o as LRTerm;
         // since rule instances are unique.
-        if (this.rule != t.rule) return false;
-        if (this.index != t.index) return false;
+        if (this.rule !== t.rule) return false;
+        if (this.index !== t.index) return false;
         return true;
     }
 }

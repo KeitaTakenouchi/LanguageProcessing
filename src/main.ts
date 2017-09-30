@@ -1,17 +1,18 @@
 
-import { Scanner } from './parser/scanner';
-import { Token } from './parser/token';
+import { Scanner } from "./parser/scanner";
+import { Token } from "./parser/token";
 
 export class Main {
     public static run(): void {
-        let fs = require('fs');
-        let filename: string = "../sample_programs/c.tip"
-        let body: string = fs.readFileSync(filename, "UTF-8");
-        let scanner = new Scanner(body);
+        const fs = require("fs");
+        const filename: string = "../sample_programs/c.tip"
+        const body: string = fs.readFileSync(filename, "UTF-8");
+        const scanner = new Scanner(body);
 
-        let token: Token;
-        while (token = scanner.scan()) {
+        let token: Token = scanner.scan();
+        while (!token) {
             console.log(token);
+            token = scanner.scan();
         }
     }
 }

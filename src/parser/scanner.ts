@@ -1,7 +1,7 @@
-﻿import { Token } from "./token";
+﻿ import { Token } from "./token";
 
 // This is a list of token types.
-export const enum SyntaxKind {
+ export const enum SyntaxKind {
 
     // errors
     IllegalToken = "IllegalToken",
@@ -33,7 +33,7 @@ export const enum SyntaxKind {
     SemicolonToken = "SemicolonToken", // ";"
     CommaToken = "CommaToken", // ","
 
-    PlusToken = "PlusToken",// "+"
+    PlusToken = "PlusToken", // "+"
     MinusToken = "MinusToken", // "-"
     AsteriskToken = "AsteriskToken", // "*"
     SlashToken = "SlashToken", // "/"
@@ -41,10 +41,10 @@ export const enum SyntaxKind {
 
     GreaterThanToken = "GreaterThanToken", // ">"
     LessThanToken = "LessThanToken", // "<"
-    EqualsToken = "EqualsToken" // "=="
+    EqualsToken = "EqualsToken", // "=="
 }
 
-export class Scanner {
+ export class Scanner {
     private souce: string;
     private pos: number;
     private line: number = 1;
@@ -57,10 +57,12 @@ export class Scanner {
     // Return undefined if scanning is over.
     public scan(): Token {
         // skip white spaces
-        while (!this.isEnd() && this.isSpace()) this.next();
+        while (!this.isEnd() && this.isSpace()) {
+            this.next();
+        }
         if (this.isEnd()) return undefined;
 
-        let start = this.pos;
+        const start = this.pos;
         let kind: SyntaxKind;
 
         switch (this.current()) {
@@ -82,7 +84,7 @@ export class Scanner {
                 break;
             case "=":
                 this.next();
-                if (this.current() == "=") {
+                if (this.current() === "=") {
                     this.next();
                     kind = SyntaxKind.EqualsToken; // "=="
                 } else {
@@ -132,7 +134,7 @@ export class Scanner {
                         this.next();
 
                     // check keywords
-                    let word: string = this.souce.substring(start, this.pos);
+                    const word: string = this.souce.substring(start, this.pos);
                     kind = SyntaxKind.Identifier;
                     switch (word) {
                         case "input":
@@ -163,19 +165,17 @@ export class Scanner {
                             kind = SyntaxKind.ReturnKeyword;
                             break;
                     }
-                }
-                else if (this.isNumeric()) {
+                } else if (this.isNumeric()) {
                     this.next();
                     while (!this.isEnd() && this.isNumeric()) this.next();
                     if (this.isAlphabet()) this.throwSyntaxError();
                     kind = SyntaxKind.NumericLiteral;
-                }
-                else {
+                } else {
                     this.throwSyntaxError();
                 }
                 break;
         }
-        let code: string = this.souce.substring(start, this.pos);
+        const code: string = this.souce.substring(start, this.pos);
         return new Token(kind, code, this.line);
     }
 
@@ -184,22 +184,22 @@ export class Scanner {
     }
 
     private isSpace(): boolean {
-        let c = this.current();
-        return c == " "
-            || c == "\t"
-            || c == "\n"
-            || c == "\r"
+        const c = this.current();
+        return c === " "
+            || c === "\t"
+            || c === "\n"
+            || c === "\r"
             ;
     }
 
     private isAlphabet(): boolean {
-        let code: number = this.current().charCodeAt(0);
+        const code: number = this.current().charCodeAt(0);
         return (code >= 0x0041 && code <= 0x005A)
             || (code >= 0x0061 && code <= 0x007A);
     }
 
     private isNumeric(): boolean {
-        let code: number = this.current().charCodeAt(0);
+        const code: number = this.current().charCodeAt(0);
         return (code >= 0x0030 && code <= 0x0039);
     }
 
@@ -208,7 +208,7 @@ export class Scanner {
     }
 
     private next(): string {
-        if (this.current() == "\n") this.line++;
+        if (this.current() === "\n") this.line++;
         this.pos++;
         return this.current();
     }

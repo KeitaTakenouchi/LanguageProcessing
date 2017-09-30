@@ -1,8 +1,7 @@
 import { SyntaxKind } from "../scanner";
 
-export interface ASTNode
-{
+export interface IASTNode {
     king: SyntaxKind;
-    parent: ASTNode;
-    children: ASTNode;
+    parent: IASTNode;
+    children: IASTNode;
 }
