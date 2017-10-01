@@ -131,9 +131,15 @@ export enum ActionKind {
 
 export class Action {
     public readonly kind: ActionKind;
-    public readonly state: number;
-    constructor(kind: ActionKind, state: number) {
+    public readonly n: number;
+    /**
+     * @param kind is a kind of the action.
+     * @param n is a target state when Shift,
+     *          is a rule index when Reduce,
+     *          is NaN when Accepted.
+     */
+    constructor(kind: ActionKind, n: number) {
         this.kind = kind;
-        this.state = state;
+        this.n = n;
     }
 }
