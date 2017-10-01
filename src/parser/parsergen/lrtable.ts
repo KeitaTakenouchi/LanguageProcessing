@@ -54,14 +54,14 @@ export class LRTable {
         console.log("---- AUTOMATA ----");
         {
             let line: string = "   |";
-            for (let symbol of this.collectAllRhs()) {
+            for (let symbol of this.allRhsSymbols()) {
                 line = line + " " + symbol.getSymbolStr() + " ";
             }
             console.log(line);
         }
         for (let state = 0; state < this.states.length; state++) {
             let line: string = " " + state + " |";
-            for (let symbol of this.collectAllRhs()) {
+            for (let symbol of this.allRhsSymbols()) {
                 let nextState = this.automata.getValue([state, symbol]);
                 if (nextState >= 10)
                     line = line + "" + nextState + " ";
@@ -70,6 +70,7 @@ export class LRTable {
                 else
                     line = line + "   ";
             }
+            console.log(line);
         }
     }
 
@@ -168,7 +169,7 @@ export class LRTable {
         initTerm.add(entryTerm);
         let initClosure: C.Set<LRTerm> = this.closure(initTerm);
 
-        let allLhs: NTSymbol[] = this.collectAllRhs();
+        let allLhs: GSymbol[] = this.allRhsSymbols();
         this.states.push(initClosure);
         let i = 0;
         let max = 0;
@@ -184,6 +185,19 @@ export class LRTable {
             }
             i++;
         }
+    }
+
+    private buildGotos() {
+        let gotos: C.Dictionary<[number, NTSymbol], number> = this.gotos;
+
+        // for (let symbol of this.allRhsSymbols()) {        }
+
+        return;
+    }
+
+    private buildActions() {
+
+        return;
     }
 
     private findRulesStartingWith(nt: NTSymbol): Rule[] {
@@ -203,10 +217,10 @@ export class LRTable {
         return undefined;
     }
 
-    private collectAllRhs(): NTSymbol[] {
-        let set = new C.Set<NTSymbol>();
-        this.rules.forEach((v) => {
-            v.getRhs().forEach((s) => {
+    private allRhsSymbols(): GSymbol[] {
+        let set = new C.Set<GSymbol>();
+        this.rules.forEach((v: Rule) => {
+            v.getRhs().forEach((s: GSymbol) => {
                 set.add(s);
             });
         });
