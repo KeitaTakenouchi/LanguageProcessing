@@ -40,6 +40,8 @@ export class LRTerm {
                 ? str.concat(".").concat(sym)
                 : str.concat(" ").concat(sym);
         }
+        if (this.index === rhs.length)
+            str = str.concat(".");
         return str;
     }
 
@@ -77,7 +79,7 @@ export class Rule {
     }
 
     public toString() {
-        return C.util.makeString(this) ;
+        return C.util.makeString(this);
     }
 }
 
