@@ -70,12 +70,7 @@ export class LRTable {
                 else
                     line = line + "   ";
             }
-            console.log(line);
         }
-
-        //        this.automata.forEach((stateAndSymbol, nextState) => {
-        //  console.log("   (" + stateAndSymbol[0] + ", " + stateAndSymbol[1] + ") -> " + nextState);
-        //  });
     }
 
     /**
@@ -178,7 +173,6 @@ export class LRTable {
         let i = 0;
         let max = 0;
         while (i <= max) {
-            console.log(i + ":" + max);
             let terms: C.Set<LRTerm> = this.states[i];
             for (let symbol of allLhs) {
                 let nextTerms: C.Set<LRTerm> = this.proccedTerms(terms, symbol);
