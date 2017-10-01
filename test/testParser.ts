@@ -41,5 +41,11 @@ describe("LR talbe", () => {
             let table = new LRTable(rules);
             table.dumpAutomata();
         });
+
+        it(" Create goto table.", () => {
+            let table = new LRTable(rules);
+            table.dumpGotos();
+            table.dumpActions();
+        });
     });
 });

@@ -1,5 +1,5 @@
 import C = require("typescript-collections");
-import { Action, EntryNTSymbol, ExitGSymbol, GSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "./grammers";
+import { Action, EntryNTSymbol, ExitGSymbol, GSymbol, LRTerm, NTSymbol, Rule, TSymbol, ActionKind } from "./grammers";
 
 export class LRTable {
     private rules: Rule[];
@@ -17,6 +17,8 @@ export class LRTable {
         this.rules = rules;
         this.calcFollows();
         this.calcAutomata();
+        this.buildActions();
+        this.buildGotos();
     }
 
     public follow(key: NTSymbol): C.Set<TSymbol> {
@@ -53,14 +55,16 @@ export class LRTable {
 
         console.log("---- AUTOMATA ----");
         {
-            let line: string = "   |";
+            let line: string = "    |";
             for (let symbol of this.allRhsSymbols()) {
                 line = line + " " + symbol.getSymbolStr() + " ";
             }
             console.log(line);
         }
         for (let state = 0; state < this.states.length; state++) {
-            let line: string = " " + state + " |";
+            let line: string = (state >= 10)
+                ? " " + state + " |"
+                : "  " + state + " |";
             for (let symbol of this.allRhsSymbols()) {
                 let nextState = this.automata.getValue([state, symbol]);
                 if (nextState >= 10)
@@ -69,6 +73,88 @@ export class LRTable {
                     line = line + " " + nextState + " ";
                 else
                     line = line + "   ";
+            }
+            console.log(line);
+        }
+    }
+
+    public dumpGotos() {
+        console.log("---- GOTOs ----");
+        {
+            let line: string = "    |";
+            for (let symbol of this.allRhsSymbols()) {
+                if (!(symbol instanceof NTSymbol)) continue;
+                line = line + " " + symbol.getSymbolStr() + " ";
+            }
+            console.log(line);
+        }
+        for (let state = 0; state < this.states.length; state++) {
+            let line: string = (state >= 10)
+                ? " " + state + " |"
+                : "  " + state + " |";
+            for (let symbol of this.allRhsSymbols()) {
+                if (!(symbol instanceof NTSymbol)) continue;
+                let nextState = this.gotos.getValue([state, symbol]);
+                if (nextState >= 10)
+                    line = line + "" + nextState + " ";
+                else if (nextState < 10)
+                    line = line + " " + nextState + " ";
+                else
+                    line = line + "   ";
+            }
+            console.log(line);
+        }
+    }
+
+    public dumpActions() {
+        console.log("---- ACTIONs ----");
+        {
+            let line: string = "    |";
+            let columns = this.allRhsSymbols();
+            columns.push(new ExitGSymbol());
+            for (let symbol of columns) {
+                if (!(symbol instanceof TSymbol) && !(symbol instanceof ExitGSymbol))
+                    continue;
+                line = line + "  " + symbol.getSymbolStr() + " ";
+            }
+            console.log(line);
+        }
+        for (let state = 0; state < this.states.length; state++) {
+            let line: string = (state >= 10)
+                ? " " + state + " |"
+                : "  " + state + " |";
+            let columns = this.allRhsSymbols();
+            columns.push(new ExitGSymbol());
+            for (let symbol of columns) {
+                if (!(symbol instanceof TSymbol) && !(symbol instanceof ExitGSymbol))
+                    continue;
+                let act = this.actions.getValue([state, symbol]);
+
+                if (!act) {
+                    line = line + "    ";
+                    continue;
+                }
+
+                let n = act.n;
+                switch (act.kind) {
+                    case ActionKind.Shift:
+                        if (n >= 10)
+                            line = line + "s" + n + " ";
+                        else
+                            line = line + " s" + n + " ";
+                        break;
+                    case ActionKind.Reduce:
+                        if (n >= 10)
+                            line = line + "r" + n + " ";
+                        else
+                            line = line + " r" + n + " ";
+                        break;
+                    case ActionKind.Accepted:
+                        line = line + " AC ";
+                        break;
+                    default:
+                        break;
+                }
             }
             console.log(line);
         }
@@ -188,16 +274,56 @@ export class LRTable {
     }
 
     private buildGotos() {
-        let gotos: C.Dictionary<[number, NTSymbol], number> = this.gotos;
+        for (let symbol of this.allRhsSymbols()) {
+            if (!(symbol instanceof NTSymbol)) continue;
 
-        // for (let symbol of this.allRhsSymbols()) {        }
-
-        return;
+            // copy transitions from automata to gotos
+            for (let i = 0; i < this.states.length; i++) {
+                let dist = this.automata.getValue([i, symbol]);
+                if (dist) {
+                    this.gotos.setValue([i, symbol], dist);
+                }
+            }
+        }
     }
 
     private buildActions() {
+        let actions: C.Dictionary<[number, TSymbol], Action> = this.actions;
 
-        return;
+        // build shift transidions.
+        for (let symbol of this.allRhsSymbols()) {
+            if (!(symbol instanceof TSymbol)) continue;
+
+            for (let i = 0; i < this.states.length; i++) {
+                let dist = this.automata.getValue([i, symbol]);
+                if (dist) {
+                    let act = new Action(ActionKind.Shift, dist);
+                    this.actions.setValue([i, symbol], act);
+                }
+            }
+        }
+
+        // build reduce
+        for (let i = 0; i < this.states.length; i++) {
+            let terms = this.states[i];
+            for (let term of terms.toArray()) {
+                // if consumed all rhs symbols, create reduce transition.
+                if (!term.getNextSymbol()) {
+                    let rule: Rule = term.getRule();
+                    let lhs = term.getRule().getLhs();
+                    for (let s of this.follows.getValue(lhs).toArray()) {
+                        let act: Action;
+                        if (rule.getLhs() instanceof EntryNTSymbol) {
+                            act = new Action(ActionKind.Accepted, NaN);
+                        } else {
+                            let ruleIndex = this.rules.indexOf(rule);
+                            act = new Action(ActionKind.Reduce, ruleIndex);
+                        }
+                        this.actions.setValue([i, s], act);
+                    }
+                }
+            }
+        }
     }
 
     private findRulesStartingWith(nt: NTSymbol): Rule[] {
