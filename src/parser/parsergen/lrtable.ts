@@ -1,5 +1,5 @@
 import C = require("typescript-collections");
-import { Action, EntryNTSymbol, ExitGSymbol, GSymbol, LRTerm, NTSymbol, Rule, TSymbol, ActionKind } from "./grammers";
+import { Action, EntryNTSymbol, ExitTSymbol, GSymbol, LRTerm, NTSymbol, Rule, TSymbol, ActionKind } from "./grammers";
 
 export class LRTable {
     private rules: Rule[];
@@ -111,9 +111,9 @@ export class LRTable {
         {
             let line: string = "    |";
             let columns = this.allRhsSymbols();
-            columns.push(new ExitGSymbol());
+            columns.push(new ExitTSymbol());
             for (let symbol of columns) {
-                if (!(symbol instanceof TSymbol) && !(symbol instanceof ExitGSymbol))
+                if (!(symbol instanceof TSymbol) && !(symbol instanceof ExitTSymbol))
                     continue;
                 line = line + "  " + symbol.getSymbolStr() + " ";
             }
@@ -124,9 +124,9 @@ export class LRTable {
                 ? " " + state + " |"
                 : "  " + state + " |";
             let columns = this.allRhsSymbols();
-            columns.push(new ExitGSymbol());
+            columns.push(new ExitTSymbol());
             for (let symbol of columns) {
-                if (!(symbol instanceof TSymbol) && !(symbol instanceof ExitGSymbol))
+                if (!(symbol instanceof TSymbol) && !(symbol instanceof ExitTSymbol))
                     continue;
                 let act = this.actions.getValue([state, symbol]);
 
@@ -170,8 +170,12 @@ export class LRTable {
     /**
      * State -> Terminal Symbol -> State
      */
-    public goto(state: number, symbol: TSymbol): number {
+    public goto(state: number, symbol: NTSymbol): number {
         return this.gotos.getValue([state, symbol]);
+    }
+
+    public getRule(index: number): Rule {
+        return this.rules[index];
     }
 
     public closure(terms: C.Set<LRTerm>): C.Set<LRTerm> {
@@ -202,7 +206,7 @@ export class LRTable {
 
     private calcFollows() {
         let prev: number = -1;
-        let exitSym = new ExitGSymbol();
+        let exitSym = new ExitTSymbol();
         while (prev !== size(this.follows)) {
             prev = size(this.follows);
             for (let rule of this.rules) {
