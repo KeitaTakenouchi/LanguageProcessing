@@ -1,16 +1,23 @@
 import C = require("typescript-collections");
 import { Action, ActionKind, ExitTSymbol, GSymbol, NTSymbol, Rule, TSymbol } from "./parsergen/grammers";
 import { LRTable } from "./parsergen/lrtable";
+import { SyntaxKind } from "./scanner";
+import { Token } from "./token";
 
 export class LRParser {
     private table: LRTable;
 
-    // this argument will be inlined in future.
-    constructor(rules: Rule[]) {
+    constructor(rules?: Rule[]) {
+        rules = (rules) ? rules : this.loadGrammer();
+        if (rules.length === 0) throw Error("No rules");
         this.table = new LRTable(rules);
     }
 
-    public parse(inputs: TSymbol[]) {
+    public parse(tokens: Token[]) {
+        let inputs: TSymbol[] = [];
+        tokens.forEach((t) => {
+            inputs.push(t.getNTSymbol());
+        });
         inputs.push(new ExitTSymbol());
         let stateStack = new C.Stack<number>();
         let symbolStack = new C.Stack<GSymbol>();
@@ -76,5 +83,16 @@ export class LRParser {
                 console.log(str);
             }
         }
+    }
+
+    private loadGrammer(): Rule[] {
+        let rules: Rule[] = [];
+
+        // rules[0] = new Rule(new NTSymbol("E"), [new NTSymbol("E"), new ]);
+        let t = new Token(SyntaxKind.Identifier, "foo", 1);
+
+        console.log("load Grammer.....");
+        console.log(t.toString());
+        return rules;
     }
 }

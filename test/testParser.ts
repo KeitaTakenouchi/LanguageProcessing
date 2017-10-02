@@ -4,6 +4,8 @@ import C = require("typescript-collections");
 import { LRParser } from "../src/parser/lrparser";
 import { EntryNTSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "../src/parser/parsergen/grammers";
 import { LRTable } from "../src/parser/parsergen/lrtable";
+import { SyntaxKind } from "../src/parser/scanner";
+import { Token } from "../src/parser/token";
 
 describe("LR talbe", () => {
     let rules: Rule[] = [];
@@ -52,16 +54,20 @@ describe("LR talbe", () => {
         it(" Parse input symbols.", () => {
             let parser = new LRParser(rules);
             // ( i + i ) * i
-            let inputs: TSymbol[] = [
-                new TSymbol("("),
-                new TSymbol("i"),
-                new TSymbol("+"),
-                new TSymbol("i"),
-                new TSymbol(")"),
-                new TSymbol("*"),
-                new TSymbol("i"),
+            let inputs: Token[] = [
+                new Token(SyntaxKind.OpenParenToken, "(", 1),
+                new Token(SyntaxKind.Identifier, "i", 1),
+                new Token(SyntaxKind.PlusToken, "+", 1),
+                new Token(SyntaxKind.Identifier, "i", 1),
+                new Token(SyntaxKind.CloseParenToken, ")", 1),
+                new Token(SyntaxKind.AsteriskToken, "*", 1),
+                new Token(SyntaxKind.Identifier, "i", 1),
             ];
             parser.parse(inputs);
+        });
+
+        it(" Parse input symbols with default grammer.", () => {
+            let parser = new LRParser();
         });
     });
 });

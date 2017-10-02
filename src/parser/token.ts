@@ -1,3 +1,4 @@
+import { TSymbol } from "./parsergen/grammers";
 import { SyntaxKind } from "./scanner";
 
 export class Token {
@@ -9,5 +10,9 @@ export class Token {
         this.line = line;
         this.code = code;
         this.kind = kind;
+    }
+
+    public getNTSymbol(): TSymbol {
+        return new TSymbol(this.code);
     }
 }
