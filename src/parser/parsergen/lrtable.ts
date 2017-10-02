@@ -1,5 +1,5 @@
 import C = require("typescript-collections");
-import { Action, EntryNTSymbol, ExitTSymbol, GSymbol, LRTerm, NTSymbol, Rule, TSymbol, ActionKind } from "./grammers";
+import { Action, ActionKind, EntryNTSymbol, ExitTSymbol, GSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "./grammers";
 
 export class LRTable {
     private rules: Rule[];
