@@ -318,7 +318,7 @@ export class LRTable {
                     for (let s of this.follows.getValue(lhs).toArray()) {
                         let act: Action;
                         if (rule.getLhs() instanceof EntryNTSymbol) {
-                            act = new Action(ActionKind.Accepted, NaN);
+                            act = new Action(ActionKind.Accepted, 0);
                         } else {
                             let ruleIndex = this.rules.indexOf(rule);
                             act = new Action(ActionKind.Reduce, ruleIndex);

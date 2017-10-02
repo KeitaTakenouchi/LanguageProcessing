@@ -1,6 +1,7 @@
 import Assert = require("assert");
 import "mocha";
 import C = require("typescript-collections");
+import { LRParser } from "../src/parser/lrparser";
 import { EntryNTSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "../src/parser/parsergen/grammers";
 import { LRTable } from "../src/parser/parsergen/lrtable";
 
@@ -46,6 +47,21 @@ describe("LR talbe", () => {
             let table = new LRTable(rules);
             table.dumpGotos();
             table.dumpActions();
+        });
+
+        it(" Parse input symbols.", () => {
+            let parser = new LRParser(rules);
+            // ( i + i ) * i
+            let inputs: TSymbol[] = [
+                new TSymbol("("),
+                new TSymbol("i"),
+                new TSymbol("+"),
+                new TSymbol("i"),
+                new TSymbol(")"),
+                new TSymbol("*"),
+                new TSymbol("i"),
+            ];
+            parser.parse(inputs);
         });
     });
 });

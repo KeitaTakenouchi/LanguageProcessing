@@ -136,7 +136,7 @@ export class Action {
      * @param kind is a kind of the action.
      * @param n is a target state when Shift,
      *          is a rule index when Reduce,
-     *          is NaN when Accepted.
+     *          is 0 when Accepted.
      */
     constructor(kind: ActionKind, n: number) {
         this.kind = kind;
