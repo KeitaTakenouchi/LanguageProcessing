@@ -257,8 +257,8 @@ export class LRTable {
 
         let allLhs: GSymbol[] = this.allRhsSymbols();
         this.states.push(initClosure);
-        let i = 0;
-        let max = 0;
+
+        let i = 0; let max = 0;
         while (i <= max) {
             let terms: C.Set<LRTerm> = this.states[i];
             for (let symbol of allLhs) {
