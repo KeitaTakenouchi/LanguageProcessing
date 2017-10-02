@@ -117,7 +117,7 @@ export class EntryNTSymbol extends NTSymbol {
     }
 }
 
-export class ExitGSymbol extends GSymbol {
+export class ExitTSymbol extends GSymbol {
     constructor() {
         super("$");
     }
