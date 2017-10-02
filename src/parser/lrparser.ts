@@ -1,5 +1,5 @@
 import C = require("typescript-collections");
-import { Action, ActionKind, ExitTSymbol, GSymbol, NTSymbol, Rule, TSymbol } from "./parsergen/grammers";
+import { Action, ActionKind, EntryNTSymbol, ExitTSymbol, GSymbol, NTSymbol, Rule, TSymbol } from "./parsergen/grammers";
 import { LRTable } from "./parsergen/lrtable";
 import { SyntaxKind } from "./scanner";
 import { Token } from "./token";
@@ -11,6 +11,10 @@ export class LRParser {
         rules = (rules) ? rules : this.loadGrammer();
         if (rules.length === 0) throw Error("No rules");
         this.table = new LRTable(rules);
+    }
+
+    public getTable() {
+        return this.table;
     }
 
     public parse(tokens: Token[]) {
@@ -29,6 +33,8 @@ export class LRParser {
             let input: TSymbol = inputs[i];
             let state = stateStack.peek();
             let act: Action = this.table.action(state, input);
+            if (!act) throw new Error("Parser Error.");
+
             switch (act.kind) {
                 case ActionKind.Shift:
                     symbolStack.push(input);
@@ -86,13 +92,63 @@ export class LRParser {
     }
 
     private loadGrammer(): Rule[] {
-        let rules: Rule[] = [];
 
-        // rules[0] = new Rule(new NTSymbol("E"), [new NTSymbol("E"), new ]);
-        let t = new Token(SyntaxKind.Identifier, "foo", 1);
+        return [
+            new Rule(N("E"), [N("E"), T("+"), N("T")]),
+            new Rule(N("E"), [N("E"), T("-"), N("T")]),
+            new Rule(N("E"), [N("T")]),
+            new Rule(N("E"), [N("E"), T(">"), N("E")]),
+            new Rule(N("E"), [N("E"), T("=="), N("E")]),
+            new Rule(N("E"), [T("input")]),
+            new Rule(N("E"), [T("X"), T("("), N("EE"), T(")")]),
+            new Rule(N("E"), [T("("), N("E"), T(")"), T("("), N("EE"), T(")")]),
+            new Rule(N("E"), [T("alloc")]),
+            new Rule(N("E"), [T("&"), T("X")]),
+            new Rule(N("E"), [T("*"), N("E")]),
+            new Rule(N("E"), [T("null")]),
 
-        console.log("load Grammer.....");
-        console.log(t.toString());
-        return rules;
+            new Rule(N("EE"), [N("EE"), T(","), N("E")]),
+            new Rule(N("EE"), [N("E")]),
+
+            new Rule(N("T"), [N("T"), T("*"), N("G")]),
+            new Rule(N("T"), [N("T"), T("/"), N("G")]),
+            new Rule(N("T"), [N("G")]),
+
+            new Rule(N("G"), [T("("), N("E"), T(")")]),
+            new Rule(N("G"), [T("I")]),
+            new Rule(N("G"), [T("X")]),
+
+            new Rule(N("S"), [T("X"), T("="), N("E"), T(";")]),
+            new Rule(N("S"), [T("output"), N("E"), T(";")]),
+            new Rule(N("S"), [T("if"), T("("), N("E"), T(")"), T("{"), N("SS"), T("}")]),
+            new Rule(N("S"), [T("if"), T("("), N("E"), T(")"), T("{"), N("SS"), T("}"),
+            T("else"), T("{"), N("SS"), T("}")]),
+            new Rule(N("S"), [T("while"), T("("), N("E"), T(")"), T("{"), N("SS"), T("}")]),
+            new Rule(N("S"), [T("*"), T("X"), T("="), N("E"), T(";")]),
+
+            new Rule(N("SS"), [N("SS"), N("S")]),
+            new Rule(N("SS"), [N("S")]),
+
+            new Rule(N("F"), [T("X"), T("("), N("XX"), T(")"),
+            T("{"), N("SS"), T("return"), N("E"), T(";"), T("}")]),
+            new Rule(N("F"), [N("X"), T("("), N("XX"), T(")"),
+            T("{"), T("var"), N("XX"), T(";"), N("SS"), T("return"), N("E"), T(";"), T("}")]),
+
+            new Rule(N("XX"), [N("XX"), T(","), T("X")]),
+            new Rule(N("XX"), [T("X")]),
+
+            new Rule(N("P"), [N("P"), N("F")]),
+            new Rule(N("P"), [N("F")]),
+
+            new Rule(new EntryNTSymbol(), [N("P")]),
+        ];
+
+        function N(str: string) {
+            return new NTSymbol(str);
+        }
+
+        function T(str: string) {
+            return new TSymbol(str);
+        }
     }
 }

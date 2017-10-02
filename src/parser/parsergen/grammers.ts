@@ -113,7 +113,7 @@ export class TSymbol extends GSymbol {
 
 export class EntryNTSymbol extends NTSymbol {
     constructor() {
-        super("S");
+        super("^");
     }
 }
 

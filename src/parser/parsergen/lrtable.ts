@@ -42,8 +42,8 @@ export class LRTable {
     public dumpRules(): void {
         console.log("---- RULES ----");
         this.rules.forEach(
-            (rule) => {
-                console.log(" " + rule.getString());
+            (rule, i) => {
+                console.log(" (" + i + ") " + rule.getString());
             });
     }
 

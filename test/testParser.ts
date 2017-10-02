@@ -4,7 +4,7 @@ import C = require("typescript-collections");
 import { LRParser } from "../src/parser/lrparser";
 import { EntryNTSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "../src/parser/parsergen/grammers";
 import { LRTable } from "../src/parser/parsergen/lrtable";
-import { SyntaxKind } from "../src/parser/scanner";
+import { Scanner, SyntaxKind } from "../src/parser/scanner";
 import { Token } from "../src/parser/token";
 
 describe("LR talbe", () => {
@@ -19,7 +19,7 @@ describe("LR talbe", () => {
             rules[3] = new Rule(new NTSymbol("T"), [new NTSymbol("T"), new TSymbol("*"), new NTSymbol("F")]);
             rules[4] = new Rule(new NTSymbol("T"), [new NTSymbol("F")]);
             rules[5] = new Rule(new NTSymbol("F"), [new TSymbol("("), new NTSymbol("E"), new TSymbol(")")]);
-            rules[6] = new Rule(new NTSymbol("F"), [new TSymbol("i")]);
+            rules[6] = new Rule(new NTSymbol("F"), [new TSymbol("X")]);
         });
 
         it(" calculate follows from rules.", () => {
@@ -56,18 +56,32 @@ describe("LR talbe", () => {
             // ( i + i ) * i
             let inputs: Token[] = [
                 new Token(SyntaxKind.OpenParenToken, "(", 1),
-                new Token(SyntaxKind.Identifier, "i", 1),
+                new Token(SyntaxKind.Identifier, "X", 1),
                 new Token(SyntaxKind.PlusToken, "+", 1),
-                new Token(SyntaxKind.Identifier, "i", 1),
+                new Token(SyntaxKind.Identifier, "X", 1),
                 new Token(SyntaxKind.CloseParenToken, ")", 1),
                 new Token(SyntaxKind.AsteriskToken, "*", 1),
-                new Token(SyntaxKind.Identifier, "i", 1),
+                new Token(SyntaxKind.Identifier, "X", 1),
             ];
             parser.parse(inputs);
         });
 
         it(" Parse input symbols with default grammer.", () => {
             let parser = new LRParser();
+            parser.getTable().dumpRules();
+
+            const fs = require("fs");
+            let filename: string = "sample_programs/c.tip";
+            let body: string = fs.readFileSync(filename, "UTF-8");
+            let scanner = new Scanner(body);
+
+            let tokens = [];
+            let token: Token = scanner.scan();
+            while (token) {
+                tokens.push(token);
+                token = scanner.scan();
+            }
+            parser.parse(tokens);
         });
     });
 });

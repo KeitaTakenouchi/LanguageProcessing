@@ -13,6 +13,18 @@ export class Token {
     }
 
     public getNTSymbol(): TSymbol {
-        return new TSymbol(this.code);
+        let s;
+        switch (this.kind) {
+            case SyntaxKind.Identifier:
+                s = new TSymbol("X");
+                break;
+            case SyntaxKind.NumericLiteral:
+                s = new TSymbol("I");
+                break;
+            default:
+                s = new TSymbol(this.code);
+                break;
+        }
+        return s;
     }
 }
