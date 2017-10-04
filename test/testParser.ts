@@ -2,16 +2,18 @@ import Assert = require("assert");
 import "mocha";
 import C = require("typescript-collections");
 import { LRParser } from "../src/parser/lrparser";
-import { EntryNTSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "../src/parser/parsergen/grammers";
+import { EntryNTSymbol, ExitTSymbol, LRTerm, NTSymbol, Rule, TSymbol } from "../src/parser/parsergen/grammers";
 import { LRTable } from "../src/parser/parsergen/lrtable";
 import { Scanner, SyntaxKind } from "../src/parser/scanner";
 import { Token } from "../src/parser/token";
 
 describe("LR talbe", () => {
-    let rules: Rule[] = [];
-    let terms: LRTerm[] = [];
+
 
     describe("Sample Grammer", () => {
+        let rules: Rule[] = [];
+        let terms: LRTerm[] = [];
+
         before(() => {
             rules[0] = new Rule(new EntryNTSymbol(), [new NTSymbol("E")]);
             rules[1] = new Rule(new NTSymbol("E"), [new NTSymbol("E"), new TSymbol("+"), new NTSymbol("T")]);
@@ -31,14 +33,14 @@ describe("LR talbe", () => {
 
         it(" calculate closure of S.", () => {
             let table = new LRTable(rules);
-            let term = new LRTerm(rules[1]);
+            let term = new LRTerm(rules[0], new ExitTSymbol());
 
             let closure: C.Set<LRTerm> = new C.Set<LRTerm>();
             closure.add(term);
             closure = table.closure(closure);
             console.log("closure of " + term.getString());
             closure.forEach((t) => { console.log("   " + t.getString()); });
-            Assert.equal(closure.size(), 6);
+            Assert.equal(closure.size(), 17);
         });
 
         it(" Create LR(0) automata.", () => {
@@ -66,11 +68,51 @@ describe("LR talbe", () => {
             ];
             parser.parse(inputs);
         });
+    });
+
+    describe("Sample Grammer 2", () => {
+        let rules: Rule[] = [];
+        let terms: LRTerm[] = [];
+
+        before(() => {
+            rules[0] = new Rule(new EntryNTSymbol(), [new NTSymbol("S")]);
+            rules[1] = new Rule(new NTSymbol("S"), [new NTSymbol("E"), new TSymbol("="), new NTSymbol("E")]);
+            rules[2] = new Rule(new NTSymbol("S"), [new TSymbol("X")]);
+            rules[3] = new Rule(new NTSymbol("E"), [new NTSymbol("E"), new TSymbol("+"), new NTSymbol("T")]);
+            rules[4] = new Rule(new NTSymbol("E"), [new NTSymbol("T")]);
+            rules[5] = new Rule(new NTSymbol("T"), [new TSymbol("X")]);
+        });
+
+        it(" Parse input symbols.", () => {
+            let parser = new LRParser(rules);
+            parser.getTable().dumpRules();
+            parser.getTable().dumpFirst();
+            parser.getTable().dumpFollow();
+            parser.getTable().dumpAutomata();
+            parser.getTable().dumpGotos();
+            parser.getTable().dumpActions();
+
+            //  i + i = i
+            let inputs: Token[] = [
+                new Token(SyntaxKind.Identifier, "X", 1),
+                new Token(SyntaxKind.PlusToken, "+", 1),
+                new Token(SyntaxKind.Identifier, "X", 1),
+                new Token(SyntaxKind.EqualsToken, "=", 1),
+                new Token(SyntaxKind.Identifier, "X", 1),
+            ];
+            parser.parse(inputs);
+        });
+    });
+
+    describe("Defalut grammer ", () => {
+        let parser;
+
+        before(() => {
+            parser = new LRParser();
+        });
 
         it(" Parse input symbols a.tip with default grammer.", () => {
-            let parser = new LRParser();
             parser.getTable().dumpRules();
-
             const fs = require("fs");
             let filename: string = "sample_programs/a.tip";
             let body: string = fs.readFileSync(filename, "UTF-8");
@@ -85,7 +127,6 @@ describe("LR talbe", () => {
         });
 
         it(" Parse input symbols of b.tip with default grammer.", () => {
-            let parser = new LRParser();
             parser.getTable().dumpRules();
 
             const fs = require("fs");
@@ -105,7 +146,6 @@ describe("LR talbe", () => {
         });
 
         it(" Parse input symbols of c.tip with default grammer.", () => {
-            let parser = new LRParser();
             parser.getTable().dumpRules();
 
             const fs = require("fs");
@@ -122,3 +162,4 @@ describe("LR talbe", () => {
         });
     });
 });
+

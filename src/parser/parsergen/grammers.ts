@@ -3,9 +3,11 @@ import C = require("typescript-collections");
 export class LRTerm {
     private rule: Rule;
     private index: number = 0;
+    private ahead: TSymbol;
 
-    constructor(rule: Rule) {
+    constructor(rule: Rule, ahead: TSymbol) {
         this.rule = rule;
+        this.ahead = ahead;
     }
 
     /**
@@ -19,8 +21,12 @@ export class LRTerm {
         return this.rule;
     }
 
+    public getAhead(): TSymbol {
+        return this.ahead;
+    }
+
     public proceed(): LRTerm {
-        const t = new LRTerm(this.rule);
+        const t = new LRTerm(this.rule, this.ahead);
         const max = this.rule.getRhs().length;
         t.index = (this.index < max) ? this.index + 1 : this.index;
         return t;
@@ -31,8 +37,14 @@ export class LRTerm {
         return this.rule.getRhs()[this.index];
     }
 
+    /** return 'undefined' if dot is on the end. */
+    public getSecondeNextSymbol(): GSymbol {
+        return this.rule.getRhs()[this.index + 1];
+    }
+
     public getString() {
-        let str: string = this.rule.getLhs().getSymbolStr().toString() + " -> ";
+        let str: string = "[".concat(this.rule.getLhs().getSymbolStr().toString())
+            .concat(" -> ");
         const rhs: GSymbol[] = this.rule.getRhs();
         for (let i = 0; i < rhs.length; i++) {
             const sym: string = rhs[i].getSymbolStr().toString();
@@ -42,6 +54,7 @@ export class LRTerm {
         }
         if (this.index === rhs.length)
             str = str.concat(".");
+        str = str.concat(", ").concat(this.ahead.getSymbolStr()).concat("]");
         return str;
     }
 
@@ -117,7 +130,7 @@ export class EntryNTSymbol extends NTSymbol {
     }
 }
 
-export class ExitTSymbol extends GSymbol {
+export class ExitTSymbol extends TSymbol {
     constructor() {
         super("$");
     }

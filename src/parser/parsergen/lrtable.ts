@@ -215,12 +215,22 @@ export class LRTable {
                 let nextSym: GSymbol = term.getNextSymbol();
                 if (!(nextSym instanceof NTSymbol)) continue;
 
+                // when [A -> a.Bb, n]
+                let sNextSym: GSymbol = term.getSecondeNextSymbol();
                 let rules = this.findRulesStartingWith(nextSym as NTSymbol);
                 for (let r of rules) {
-                    let t = new LRTerm(r);
-                    if (all.contains(t)) continue;
-                    all.add(t);
-                    nextTerms.add(t);
+                    // FIRST[bn]
+                    let snexts = this.first(sNextSym);
+                    let aheads: C.Set<TSymbol> = (snexts.size() !== 0)
+                        ? snexts // FIRST[b]
+                        : this.first(term.getAhead()); // FIRST[n]
+
+                    for (let ahead of aheads.toArray()) {
+                        let t = new LRTerm(r, ahead);
+                        if (all.contains(t)) continue;
+                        all.add(t);
+                        nextTerms.add(t);
+                    }
                 }
             }
             if (nextTerms.size() === 0) break;
@@ -233,7 +243,7 @@ export class LRTable {
         let prev: number = -1;
         while (prev !== size(this.follows)) {
             prev = size(this.follows);
-            for (let rule of this.rules.reverse()) {
+            for (let rule of this.rules) {
                 let lhs: NTSymbol = rule.getLhs();
                 let rhs: GSymbol[] = rule.getRhs();
 
@@ -305,7 +315,7 @@ export class LRTable {
     private calcAutomata() {
         // calc init state from the entry rule.
         let entryRule: Rule = this.findEntryRule();
-        let entryTerm: LRTerm = new LRTerm(entryRule);
+        let entryTerm: LRTerm = new LRTerm(entryRule, new ExitTSymbol());
         let initTerm: C.Set<LRTerm> = new C.Set<LRTerm>();
         initTerm.add(entryTerm);
         let initClosure: C.Set<LRTerm> = this.closure(initTerm);
@@ -367,6 +377,7 @@ export class LRTable {
                     let rule: Rule = term.getRule();
                     let lhs = term.getRule().getLhs();
                     for (let s of this.follows.getValue(lhs).toArray()) {
+                        if (term.getAhead().getSymbolStr() !== s.getSymbolStr()) continue;
                         let act: Action;
                         if (rule.getLhs() instanceof EntryNTSymbol) {
                             act = new Action(ActionKind.Accepted, 0);
@@ -376,7 +387,7 @@ export class LRTable {
                         }
                         if (this.actions.getValue([i, s]) &&
                             this.actions.getValue([i, s]).n !== act.n) {
-                            throw new Error("Not LR(0)!!!");
+                        //    throw new Error("Not LR(0)!!!");
                         }
                         this.actions.setValue([i, s], act);
                     }
