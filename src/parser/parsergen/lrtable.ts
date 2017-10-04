@@ -5,6 +5,7 @@ export class LRTable {
     private rules: Rule[];
     private terms: LRTerm[] = [];
 
+    private firsts: C.Dictionary<GSymbol, C.Set<TSymbol>> = new C.Dictionary();
     private follows: C.Dictionary<NTSymbol, C.Set<TSymbol>> = new C.Dictionary();
 
     private automata: C.Dictionary<[number, GSymbol], number> = new C.Dictionary();
@@ -15,10 +16,25 @@ export class LRTable {
 
     constructor(rules: Rule[]) {
         this.rules = rules;
+        this.calcFirsts();
         this.calcFollows();
         this.calcAutomata();
         this.buildActions();
         this.buildGotos();
+    }
+
+    public first(key: GSymbol): C.Set<TSymbol> {
+        if (key instanceof TSymbol) {
+            let set = new C.Set<TSymbol>();
+            set.add(key);
+            return set;
+        }
+        let val = this.firsts.getValue(key);
+        if (!val) {
+            val = new C.Set<TSymbol>();
+            this.firsts.setValue(key, val);
+        }
+        return val;
     }
 
     public follow(key: NTSymbol): C.Set<TSymbol> {
@@ -28,6 +44,15 @@ export class LRTable {
             this.follows.setValue(key, val);
         }
         return val;
+    }
+
+    public dumpFirst(): void {
+        console.log("---- FIRSTS ----");
+        this.firsts.forEach(
+            (key: GSymbol, values: C.Set<TSymbol>) => {
+                console.log(" FIRST[" + key.getSymbolStr() + "] = {"
+                    + values.toArray().map((s) => s.getSymbolStr()).join(", ") + "}");
+            });
     }
 
     public dumpFollow(): void {
@@ -204,6 +229,34 @@ export class LRTable {
         return all;
     }
 
+    private calcFirsts() {
+        let prev: number = -1;
+        while (prev !== size(this.follows)) {
+            prev = size(this.follows);
+            for (let rule of this.rules.reverse()) {
+                let lhs: NTSymbol = rule.getLhs();
+                let rhs: GSymbol[] = rule.getRhs();
+
+                if (rhs[0] instanceof TSymbol) {
+                    // when A -> a
+                    // FIRST[A] = FIRST[A] ∪ {a}
+                    this.first(lhs).add(rhs[0]);
+                } else if (rhs[0] instanceof NTSymbol) {
+                    // when A -> B
+                    // FIRST[A] = FIRST[A] ∪ FIRST[B]
+                    this.first(lhs).union(this.first(rhs[0]));
+                }
+            }
+        }
+        // local function.
+        function size(map: C.Dictionary<GSymbol, C.Set<TSymbol>>): number {
+            let sum = 0;
+            for (let vs of map.values())
+                sum = sum + vs.size();
+            return sum;
+        }
+    }
+
     private calcFollows() {
         let prev: number = -1;
         let exitSym = new ExitTSymbol();
@@ -215,8 +268,7 @@ export class LRTable {
                 // when S -> *
                 if (lhs instanceof EntryNTSymbol) {
                     // follow[S] = follow[S] ∪ {$}
-                    let fs = this.follow(lhs);
-                    fs.add(exitSym);
+                    this.follow(lhs).add(exitSym);
                 }
 
                 let rhs: GSymbol[] = rule.getRhs();
@@ -225,10 +277,9 @@ export class LRTable {
                     let next: GSymbol = rhs[i + 1];
 
                     // when A -> aBb
-                    if (current instanceof NTSymbol && next instanceof TSymbol) {
-                        // follow[B] = follow[B] ∪ {b}
-                        let fb = this.follow(current);
-                        fb.add(next);
+                    if (current instanceof NTSymbol && next) {
+                        // follow[B] = follow[B] ∪ first[b]
+                        this.follow(current).union(this.first(next));
                     }
 
                     // when A -> aB
@@ -322,6 +373,10 @@ export class LRTable {
                         } else {
                             let ruleIndex = this.rules.indexOf(rule);
                             act = new Action(ActionKind.Reduce, ruleIndex);
+                        }
+                        if (this.actions.getValue([i, s]) &&
+                            this.actions.getValue([i, s]).n !== act.n) {
+                            throw new Error("Not LR(0)!!!");
                         }
                         this.actions.setValue([i, s], act);
                     }

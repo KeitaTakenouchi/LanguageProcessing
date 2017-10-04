@@ -22,9 +22,10 @@ describe("LR talbe", () => {
             rules[6] = new Rule(new NTSymbol("F"), [new TSymbol("X")]);
         });
 
-        it(" calculate follows from rules.", () => {
+        it(" calculate follows and firsts from rules.", () => {
             let table = new LRTable(rules);
             table.dumpRules();
+            table.dumpFirst();
             table.dumpFollow();
         });
 
@@ -66,7 +67,44 @@ describe("LR talbe", () => {
             parser.parse(inputs);
         });
 
-        it(" Parse input symbols with default grammer.", () => {
+        it(" Parse input symbols a.tip with default grammer.", () => {
+            let parser = new LRParser();
+            parser.getTable().dumpRules();
+
+            const fs = require("fs");
+            let filename: string = "sample_programs/a.tip";
+            let body: string = fs.readFileSync(filename, "UTF-8");
+            let scanner = new Scanner(body);
+
+            let tokens = [];
+            let token;
+            while (token = scanner.scan())
+                tokens.push(token);
+
+            parser.parse(tokens);
+        });
+
+        it(" Parse input symbols of b.tip with default grammer.", () => {
+            let parser = new LRParser();
+            parser.getTable().dumpRules();
+
+            const fs = require("fs");
+            let filename: string = "sample_programs/b.tip";
+            let body: string = fs.readFileSync(filename, "UTF-8");
+            let scanner = new Scanner(body);
+
+            let tokens = [];
+            let token;
+            while (token = scanner.scan())
+                tokens.push(token);
+
+            parser.getTable().dumpFirst();
+            parser.getTable().dumpFollow();
+            parser.getTable().dumpAutomata();
+            parser.parse(tokens);
+        });
+
+        it(" Parse input symbols of c.tip with default grammer.", () => {
             let parser = new LRParser();
             parser.getTable().dumpRules();
 
@@ -76,11 +114,10 @@ describe("LR talbe", () => {
             let scanner = new Scanner(body);
 
             let tokens = [];
-            let token: Token = scanner.scan();
-            while (token) {
+            let token;
+            while (token = scanner.scan())
                 tokens.push(token);
-                token = scanner.scan();
-            }
+
             parser.parse(tokens);
         });
     });

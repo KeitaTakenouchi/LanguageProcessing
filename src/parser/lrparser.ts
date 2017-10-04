@@ -33,7 +33,7 @@ export class LRParser {
             let input: TSymbol = inputs[i];
             let state = stateStack.peek();
             let act: Action = this.table.action(state, input);
-            if (!act) throw new Error("Parser Error.");
+            if (!act) throw new Error("Parser Error. at (state=" + state + ", " + input + ")");
 
             switch (act.kind) {
                 case ActionKind.Shift:
@@ -42,7 +42,7 @@ export class LRParser {
                     i++;
                     break;
                 case ActionKind.Reduce:
-                    console.log("r" + act.n);
+                    console.log("reduce : " + this.table.getRule(act.n).getString());
                     let rule = this.table.getRule(act.n);
                     for (let _ of rule.getRhs()) {
                         symbolStack.pop();
@@ -54,7 +54,7 @@ export class LRParser {
                     stateStack.push(this.table.goto(top, lhs));
                     break;
                 case ActionKind.Accepted:
-                    console.log("r" + act.n);
+                    console.log("reduce : ^ -> " + symbolStack.peek().getSymbolStr());
                     return;
             }
         }
@@ -91,21 +91,13 @@ export class LRParser {
         }
     }
 
+    // default grammer.
     private loadGrammer(): Rule[] {
 
         return [
             new Rule(N("E"), [N("E"), T("+"), N("T")]),
             new Rule(N("E"), [N("E"), T("-"), N("T")]),
             new Rule(N("E"), [N("T")]),
-            new Rule(N("E"), [N("E"), T(">"), N("E")]),
-            new Rule(N("E"), [N("E"), T("=="), N("E")]),
-            new Rule(N("E"), [T("input")]),
-            new Rule(N("E"), [T("X"), T("("), N("EE"), T(")")]),
-            new Rule(N("E"), [T("("), N("E"), T(")"), T("("), N("EE"), T(")")]),
-            new Rule(N("E"), [T("alloc")]),
-            new Rule(N("E"), [T("&"), T("X")]),
-            new Rule(N("E"), [T("*"), N("E")]),
-            new Rule(N("E"), [T("null")]),
 
             new Rule(N("EE"), [N("EE"), T(","), N("E")]),
             new Rule(N("EE"), [N("E")]),
@@ -117,6 +109,17 @@ export class LRParser {
             new Rule(N("G"), [T("("), N("E"), T(")")]),
             new Rule(N("G"), [T("I")]),
             new Rule(N("G"), [T("X")]),
+            new Rule(N("G"), [N("E"), T(">"), N("E")]),
+            new Rule(N("G"), [N("E"), T("=="), N("E")]),
+            new Rule(N("G"), [T("input")]),
+            new Rule(N("G"), [T("X"), T("("), N("EE"), T(")")]),
+            new Rule(N("G"), [T("X"), T("("), T(")")]),
+            new Rule(N("G"), [T("("), N("E"), T(")"), T("("), N("EE"), T(")")]),
+            new Rule(N("G"), [T("("), N("E"), T(")"), T("("), T(")")]),
+            new Rule(N("G"), [T("alloc")]),
+            new Rule(N("G"), [T("&"), T("X")]),
+            new Rule(N("G"), [T("*"), N("E")]),
+            new Rule(N("G"), [T("null")]),
 
             new Rule(N("S"), [T("X"), T("="), N("E"), T(";")]),
             new Rule(N("S"), [T("output"), N("E"), T(";")]),
@@ -129,10 +132,12 @@ export class LRParser {
             new Rule(N("SS"), [N("SS"), N("S")]),
             new Rule(N("SS"), [N("S")]),
 
-            new Rule(N("F"), [T("X"), T("("), N("XX"), T(")"),
-            T("{"), N("SS"), T("return"), N("E"), T(";"), T("}")]),
-            new Rule(N("F"), [N("X"), T("("), N("XX"), T(")"),
-            T("{"), T("var"), N("XX"), T(";"), N("SS"), T("return"), N("E"), T(";"), T("}")]),
+            new Rule(N("F"), [T("X"), T("("), N("XX"), T(")"), T("{"), N("SS"), T("return"), N("E"), T(";"), T("}")]),
+            new Rule(N("F"), [T("X"), T("("), T(")"), T("{"), N("SS"), T("return"), N("E"), T(";"), T("}")]),
+            new Rule(N("F"), [N("X"), T("("), N("XX"), T(")")
+                , T("{"), T("var"), N("XX"), T(";"), N("SS"), T("return"), N("E"), T(";"), T("}")]),
+            new Rule(N("F"), [N("X"), T("("), T(")")
+                , T("{"), T("var"), N("XX"), T(";"), N("SS"), T("return"), N("E"), T(";"), T("}")]),
 
             new Rule(N("XX"), [N("XX"), T(","), T("X")]),
             new Rule(N("XX"), [T("X")]),
