@@ -9,7 +9,6 @@ import { Token } from "../src/parser/token";
 
 describe("LR talbe", () => {
 
-
     describe("Sample Grammer", () => {
         let rules: Rule[] = [];
         let terms: LRTerm[] = [];
@@ -29,18 +28,6 @@ describe("LR talbe", () => {
             table.dumpRules();
             table.dumpFirst();
             table.dumpFollow();
-        });
-
-        it(" calculate closure of S.", () => {
-            let table = new LRTable(rules);
-            let term = new LRTerm(rules[0], new ExitTSymbol());
-
-            let closure: C.Set<LRTerm> = new C.Set<LRTerm>();
-            closure.add(term);
-            closure = table.closure(closure);
-            console.log("closure of " + term.getString());
-            closure.forEach((t) => { console.log("   " + t.getString()); });
-            Assert.equal(closure.size(), 17);
         });
 
         it(" Create LR(0) automata.", () => {
@@ -85,12 +72,6 @@ describe("LR talbe", () => {
 
         it(" Parse input symbols.", () => {
             let parser = new LRParser(rules);
-            parser.getTable().dumpRules();
-            parser.getTable().dumpFirst();
-            parser.getTable().dumpFollow();
-            parser.getTable().dumpAutomata();
-            parser.getTable().dumpGotos();
-            parser.getTable().dumpActions();
 
             //  i + i = i
             let inputs: Token[] = [
@@ -105,14 +86,9 @@ describe("LR talbe", () => {
     });
 
     describe("Defalut grammer ", () => {
-        let parser;
-
-        before(() => {
-            parser = new LRParser();
-        });
+        let parser = new LRParser();
 
         it(" Parse input symbols a.tip with default grammer.", () => {
-            parser.getTable().dumpRules();
             const fs = require("fs");
             let filename: string = "sample_programs/a.tip";
             let body: string = fs.readFileSync(filename, "UTF-8");
@@ -127,8 +103,6 @@ describe("LR talbe", () => {
         });
 
         it(" Parse input symbols of b.tip with default grammer.", () => {
-            parser.getTable().dumpRules();
-
             const fs = require("fs");
             let filename: string = "sample_programs/b.tip";
             let body: string = fs.readFileSync(filename, "UTF-8");
@@ -139,15 +113,10 @@ describe("LR talbe", () => {
             while (token = scanner.scan())
                 tokens.push(token);
 
-            parser.getTable().dumpFirst();
-            parser.getTable().dumpFollow();
-            parser.getTable().dumpAutomata();
             parser.parse(tokens);
         });
 
         it(" Parse input symbols of c.tip with default grammer.", () => {
-            parser.getTable().dumpRules();
-
             const fs = require("fs");
             let filename: string = "sample_programs/c.tip";
             let body: string = fs.readFileSync(filename, "UTF-8");

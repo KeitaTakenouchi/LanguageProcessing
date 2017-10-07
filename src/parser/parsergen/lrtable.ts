@@ -19,31 +19,8 @@ export class LRTable {
         this.calcFirsts();
         this.calcFollows();
         this.calcAutomata();
-        this.buildActions();
-        this.buildGotos();
-    }
-
-    public first(key: GSymbol): C.Set<TSymbol> {
-        if (key instanceof TSymbol) {
-            let set = new C.Set<TSymbol>();
-            set.add(key);
-            return set;
-        }
-        let val = this.firsts.getValue(key);
-        if (!val) {
-            val = new C.Set<TSymbol>();
-            this.firsts.setValue(key, val);
-        }
-        return val;
-    }
-
-    public follow(key: NTSymbol): C.Set<TSymbol> {
-        let val = this.follows.getValue(key);
-        if (!val) {
-            val = new C.Set<TSymbol>();
-            this.follows.setValue(key, val);
-        }
-        return val;
+        this.calcActions();
+        this.calcGotos();
     }
 
     public dumpFirst(): void {
@@ -185,25 +162,15 @@ export class LRTable {
         }
     }
 
-    /**
-     * State -> Non-Terminal Symbol -> (ActionKind, State)
-     */
-    public action(state: number, symbol: NTSymbol): Action {
-        return this.actions.getValue([state, symbol]);
+    public getActions(): C.Dictionary<[number, TSymbol], Action> {
+        return this.actions;
     }
 
-    /**
-     * State -> Terminal Symbol -> State
-     */
-    public goto(state: number, symbol: NTSymbol): number {
-        return this.gotos.getValue([state, symbol]);
+    public getGotos(): C.Dictionary<[number, NTSymbol], number> {
+        return this.gotos;
     }
 
-    public getRule(index: number): Rule {
-        return this.rules[index];
-    }
-
-    public closure(terms: C.Set<LRTerm>): C.Set<LRTerm> {
+    private closure(terms: C.Set<LRTerm>): C.Set<LRTerm> {
         let all: C.Set<LRTerm> = new C.Set<LRTerm>();
         terms.forEach((v) => { all.add(v); });
 
@@ -237,6 +204,29 @@ export class LRTable {
             added.push(nextTerms);
         }
         return all;
+    }
+
+    private first(key: GSymbol): C.Set<TSymbol> {
+        if (key instanceof TSymbol) {
+            let set = new C.Set<TSymbol>();
+            set.add(key);
+            return set;
+        }
+        let val = this.firsts.getValue(key);
+        if (!val) {
+            val = new C.Set<TSymbol>();
+            this.firsts.setValue(key, val);
+        }
+        return val;
+    }
+
+    private follow(key: NTSymbol): C.Set<TSymbol> {
+        let val = this.follows.getValue(key);
+        if (!val) {
+            val = new C.Set<TSymbol>();
+            this.follows.setValue(key, val);
+        }
+        return val;
     }
 
     private calcFirsts() {
@@ -338,7 +328,7 @@ export class LRTable {
         }
     }
 
-    private buildGotos() {
+    private calcGotos() {
         for (let symbol of this.allRhsSymbols()) {
             if (!(symbol instanceof NTSymbol)) continue;
 
@@ -352,7 +342,7 @@ export class LRTable {
         }
     }
 
-    private buildActions() {
+    private calcActions() {
         let actions: C.Dictionary<[number, TSymbol], Action> = this.actions;
 
         // build shift transidions.
@@ -384,10 +374,6 @@ export class LRTable {
                         } else {
                             let ruleIndex = this.rules.indexOf(rule);
                             act = new Action(ActionKind.Reduce, ruleIndex);
-                        }
-                        if (this.actions.getValue([i, s]) &&
-                            this.actions.getValue([i, s]).n !== act.n) {
-                        //    throw new Error("Not LR(0)!!!");
                         }
                         this.actions.setValue([i, s], act);
                     }
